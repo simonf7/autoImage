@@ -40,7 +40,7 @@ list($fileName, $queryString) = array_pad(explode('?', $requestUri, 2), 2, null)
 list($size, $actualFile) = array_pad(explode('_', $fileName, 2), 2, null);
 
 /** Make sure the size is listed in the $allowedSizes array */
-if ($allowedSizes===null || !in_array($size, $allowedSizes)) {
+if ($allowedSizes!==null && !in_array($size, $allowedSizes)) {
     showNotFound();
     die();
 }
