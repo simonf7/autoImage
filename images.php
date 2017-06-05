@@ -122,13 +122,13 @@ switch ($fileType)
 
     case 'gif':
         imagegif($newImage, __DIR__ . '/' . $fileName);
-        header('Content-Type: ');
+        header('Content-Type: image/gif');
         imagegif($newImage);
         break;
 
     case 'png':
         imagepng($newImage, __DIR__ . '/' . $fileName);
-        header('Content-Type: ');
+        header('Content-Type: image/png');
         imagepng($newImage);
         break;
 }
