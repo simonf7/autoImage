@@ -5,6 +5,8 @@ Requesting 400x400_test.jpg will result (if test.jpg exists) in a cropped 400x40
 
 In addition 400x400_test.jpg will be written to the folder to be returned next time the file is requested.
 
+**Note:** *transparency is not retained with PNG and GIF files*
+
 At the head of the file there are a number of configurable options -
 
 ## $allowedSizes
