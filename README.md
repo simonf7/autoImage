@@ -7,13 +7,13 @@ In addition 400x400_test.jpg will be written to the folder to be returned next t
 
 At the head of the file there are a number of configurable options -
 
-##$allowedSizes
+## $allowedSizes
 An array containing a list of sizes that can be requested, specified as a string '400x400' etc.
 
 If this is null then any size can be requested.
 
-##$jpegQuality
+## $jpegQuality
 Affects the quality of saved JPEG files.
 
-##$passPhrase
+## $passPhrase
 Pass phrase for accessing administion functions when implemented.
