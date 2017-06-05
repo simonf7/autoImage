@@ -8,11 +8,11 @@
 /** @var array $allowedSizes    This is a list of sizes that are allowed */
 $allowedSizes = array('400x400', '290x180', '150x100');
 
-/** @var string $passPhrase     Secret passphraes to allow admin functions */
-$passPhrase = 'justdoit';
-
 /** @var int jpegQuality        Default quality for JPEG images */
 $jpegQuality = 85;
+
+/** @var string $passPhrase     Secret passphraes to allow admin functions */
+$passPhrase = 'justdoit';
 
 
 /**
@@ -40,7 +40,7 @@ list($fileName, $queryString) = array_pad(explode('?', $requestUri, 2), 2, null)
 list($size, $actualFile) = array_pad(explode('_', $fileName, 2), 2, null);
 
 /** Make sure the size is listed in the $allowedSizes array */
-if (!in_array($size, $allowedSizes)) {
+if ($allowedSizes===null || !in_array($size, $allowedSizes)) {
     showNotFound();
     die();
 }
