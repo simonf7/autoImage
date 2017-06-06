@@ -12,10 +12,10 @@ The script can be passed a number of parameters which allow its behaviour to be 
 
 Some of these require a passphrase to be passed to authenticate the request.
 
-### pp=<<passphrase>>
+### pp={{passphrase}}
 This passphrase needs to match that set in the script.
 
-### cmd=<<command>>
+### cmd={{command}}
 The command you wish to perform. Some are passed alongside the image request and others direct to the script.
 
 **nocache**
@@ -45,11 +45,22 @@ At the head of the file there are a number of configurable options -
 
 ### $allowedSizes
 An array containing a list of sizes that can be requested, specified as a string '400x400' etc.
-
+```
+$allowedSizes = array('100x100', '600x400');
+```
 If this is null then any size can be requested.
+```
+$allowedSizes = null;
+```
 
 ### $jpegQuality
-Affects the quality of saved JPEG files.
+Affects the quality of saved JPEG files. This is specified as a percentage, i.e. 100 being the best.
+```
+$jpegQuality = 85;
+```
 
 ### $passPhrase
 Pass phrase for accessing administion functions when implemented - this should be changed to something else.
+```
+$passPhrase = 'secret_passphrase';
+```
