@@ -27,18 +27,20 @@ Prevents the script from saving the cached copy of the new image on the server.
 /400x400_test.jpg?cmd=nocache
 ```
 
+This command doesn't require the passphrase.
+
 **delete**
 
 Call the script directly and delete copies of cached images. 
 
 An extra parameter **fn** needs to be passed to specify the name of the image.
 
-This command requies the passphrase to be passed and correct.
-
 *Example:*
 ```
 /images.php?cmd=delete&fn=test.jpg&pp=secret_passphrase
 ```
+
+This command requires the passphrase to be passed and correct.
 
 ## Configuration options
 At the head of the file there are a number of configurable options -
@@ -60,7 +62,7 @@ $jpegQuality = 85;
 ```
 
 ### $passPhrase
-Pass phrase for accessing administion functions when implemented - this should be changed to something else.
+Passphrase for accessing administion functions when implemented - this should be changed to something else.
 ```
 $passPhrase = 'secret_passphrase';
 ```
