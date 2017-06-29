@@ -6,15 +6,17 @@
  */
 
 
-/** @var array $allowedSizes        This is a list of sizes that are allowed */
-$allowedSizes = array('400x400', '290x180', '150x100');
+/** @var string $imageSource        Where the source images are */
+$imageSource = __DIR__ . '/';
 
-/** @var int jpegQuality            Default quality for JPEG images */
+/** @var array $allowedSizes        This is a list of sizes that are allowed */
+$allowedSizes = array('400x400', '290x180', '150x100', 'm150x100', 'm2000x100');
+
+/** @var int $jpegQuality           Default quality for JPEG images */
 $jpegQuality = 85;
 
 /** @var string $passPhrase         Secret passphrases to allow admin functions */
 $passPhrase = 'secret_passphrase'; /** Change this! */
-
 
 /** @var boolean $boolAdm           Was the passphrase sent and correct, this is needed to run any commands */
 $boolPP = empty($_REQUEST['pp']) ? false : ($_REQUEST['pp'] == $passPhrase);
@@ -32,7 +34,7 @@ if ($reqCmd == 'delete' && $boolPP===true) {
     /** Go through each allowed size and remove the file is one already created */
     foreach ($allowedSizes as $size) {
         /** @var string $checkName  Create the filename to check for based on passed filename and size */
-        $checkName = __DIR__ . '/' . $size . '_' . $reqFN;
+        $checkName = __DIR__ . '/' . $reqFN . '_' . $size;
         if (file_exists($checkName)) {
             unlink($checkName);
         }
@@ -65,9 +67,12 @@ $requestUri = basename($_SERVER['REQUEST_URI']);
 /** @var string $fileName       Split off file name from the URI, discard the query string these will be in the $_REQUEST array */
 list($fileName, $queryString) = array_pad(explode('?', $requestUri, 2), 2, null);
 
-/** @var string $reqSize            Split the file name into size */
+/** @var string $fileType           the file extension */
+list($nameNoType, $fileType) = array_pad(explode('.', $fileName, 2), 2, null);
+
 /** @var string $actualFile         and actual file name */
-list($reqSize, $actualFile) = array_pad(explode('_', $fileName, 2), 2, null);
+/** @var string $reqSize            Split the file name into size */
+list($actualFile, $reqSize) = array_pad(explode('_', $nameNoType, 2), 2, null);
 
 /** Make sure the size is listed in the $allowedSizes array */
 if ($allowedSizes!==null && !in_array($reqSize, $allowedSizes)) {
@@ -76,18 +81,24 @@ if ($allowedSizes!==null && !in_array($reqSize, $allowedSizes)) {
 }
 
 /** Does an original file exist? */
-$actualFile = __DIR__ . '/' . $actualFile;
+$actualFile = $imageSource . $actualFile . '.' . $fileType;
 if (!file_exists($actualFile)) {
     showNotFound();
     die();
 }
 
-/** @var int $newWidth              Dimensions of the new file requested, width
+/** @var boolean $maxSize           If the size request starts with an 'm' we're just choosing the maximum size */
+if (substr($reqSize, 0, 1)=='m') {
+    $maxSize = true;
+    $reqSize = substr($reqSize, 1);
+}
+else {
+    $maxSize = false;
+}
+
+/** @var int $newWidth              Dimensions of the new file requested, width x height */
 /** @var int $newHeight             and height */
 list($newWidth, $newHeight) = explode('x', $reqSize, 2);
-
-/** @var string $fileType           Get the file type */
-$fileType = strtolower(pathinfo($actualFile, PATHINFO_EXTENSION));
 
 /** @var object $srcImage           Work out the file type by using the file extension and create the image */
 switch ($fileType) {
@@ -119,26 +130,44 @@ if ($srcImage===null) {
 $srcWidth = imagesx($srcImage);
 $srcHeight = imagesy($srcImage);
 
-/** Work out scaling */
-$srcRatio = $srcWidth/$srcHeight;
-$newRatio = $newWidth/$newHeight;
-if ($newRatio > $srcRatio) {
-    $tempHeight = $newWidth / $srcRatio;
-    $tempWidth = $newWidth;
+/** If just a maximum size required, simply scale the image */
+if ($maxSize) {
+    /** Work out the maximum size and scale */
+    $srcRatio = $srcWidth/$srcHeight;
+    if (($srcWidth/$newWidth)>($srcHeight/$newHeight)) {
+        $tempWidth = $newWidth;
+        $tempHeight = $newWidth / $srcRatio;
+    }
+    else {
+        $tempHeight = $newHeight;
+        $tempWidth = $newHeight * $srcRatio;
+    }
+    
+    /** @var object $newImage       New image to copy the original image to the actual size we want */
+    $newImage = imagecreatetruecolor($tempWidth, $tempHeight);
+    imagecopyresampled($newImage, $srcImage, 0, 0, 0, 0, $tempWidth, $tempHeight, $srcWidth, $srcHeight);
 }
 else {
-    $tempWidth = $newHeight * $srcRatio;
-    $tempHeight = $newHeight;
+    /** Work out scaling */
+    $srcRatio = $srcWidth/$srcHeight;
+    $newRatio = $newWidth/$newHeight;
+    if ($newRatio > $srcRatio) {
+        $tempHeight = $newWidth / $srcRatio;
+        $tempWidth = $newWidth;
+    }
+    else {
+        $tempWidth = $newHeight * $srcRatio;
+        $tempHeight = $newHeight;
+    }
+
+    /** @var object $tempImage      Create temporary image to store the scaled version */
+    $tempImage = imagecreatetruecolor(round($tempWidth), round($tempHeight));
+    imagecopyresampled($tempImage, $srcImage, 0, 0, 0, 0, $tempWidth, $tempHeight, $srcWidth, $srcHeight);
+
+    /** @var object $newImage       New image to crop the temporary image to the actual size we want */
+    $newImage = imagecreatetruecolor($newWidth, $newHeight);
+    imagecopyresampled($newImage, $tempImage, 0, 0, (($tempWidth >> 1) - ($newWidth >> 1)), (($tempHeight >> 1) - ($newHeight >> 1)), $newWidth, $newHeight, $newWidth, $newHeight);
 }
-
-/** @var object $tempImage      Create temporary image to store the scaled version */
-$tempImage = imagecreatetruecolor(round($tempWidth), round($tempHeight));
-imagecopyresampled($tempImage, $srcImage, 0, 0, 0, 0, $tempWidth, $tempHeight, $srcWidth, $srcHeight);
-
-/** @var object $newImage       New image to crop the temporary image to the actual size we want */
-$newImage = imagecreatetruecolor($newWidth, $newHeight);
-imagecopyresampled($newImage, $tempImage, 0, 0, (($tempWidth >> 1) - ($newWidth >> 1)), (($tempHeight >> 1) - ($newHeight >> 1)), $newWidth, $newHeight, $newWidth, $newHeight);
-
 
 /** Output the image to a file unless requested not to */
 if ($reqCmd != 'nocache') {

@@ -5,6 +5,8 @@ Requesting 400x400_test.jpg will result (if test.jpg exists) in a cropped 400x40
 
 In addition 400x400_test.jpg will be written to the folder to be returned next time the file is requested.
 
+Prefixing the size with an 'm' instructs the script to use the size as a maximum size maintaining the aspect ratio of the source. Specifying a large size for either the height or width effectively sets a maximum width or height.
+
 **Note:** *transparency is not retained with PNG and GIF files*
 
 ## Parameters
