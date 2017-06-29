@@ -7,7 +7,7 @@
 
 
 /** @var string $imageSource        Where the source images are */
-$imageSource = __DIR__ . '/';
+$imageSource = /*__DIR__ . '/'*/ 'http://www.mycareersroom.co.uk/_gfx/images/' ;
 
 /** @var array $allowedSizes        This is a list of sizes that are allowed */
 $allowedSizes = array('400x400', '290x180', '150x100', 'm150x100', 'm2000x100');
@@ -80,13 +80,6 @@ if ($allowedSizes!==null && !in_array($reqSize, $allowedSizes)) {
     die();
 }
 
-/** Does an original file exist? */
-$actualFile = $imageSource . $actualFile . '.' . $fileType;
-if (!file_exists($actualFile)) {
-    showNotFound();
-    die();
-}
-
 /** @var boolean $maxSize           If the size request starts with an 'm' we're just choosing the maximum size */
 if (substr($reqSize, 0, 1)=='m') {
     $maxSize = true;
@@ -100,23 +93,53 @@ else {
 /** @var int $newHeight             and height */
 list($newWidth, $newHeight) = explode('x', $reqSize, 2);
 
-/** @var object $srcImage           Work out the file type by using the file extension and create the image */
-switch ($fileType) {
-    case 'jpg':
-    case 'jpeg':
-        $srcImage = imagecreatefromjpeg($actualFile);
-        break;
+/** @var string $actualFile         Create the filename */    
+$actualFile = $imageSource . $actualFile . '.' . $fileType;
 
-    case 'gif':
-        $srcImage = imagecreatefromgif($actualFile);
-        break;
+/** Work out where the source file is and either download or simply read */
+if (strpos($actualFile, '//')!==false) {
+    /** @var object $ch             The CURL object to download the file from a remote source */
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $actualFile);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_SSLVERSION,3);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, TRUE);
+    $imageData = curl_exec($ch);
+    $error = curl_error($ch); 
+    curl_close($ch);
 
-    case 'png':
-        $srcImage = imagecreatefrompng($actualFile);
-        break;
+    /** @var object $srcImage       Create the image from what's downloaded */
+    $srcImage = @imagecreatefromstring($imageData);
+    if ($srcImage===false) {
+        showNotFound();
+        die();
+    }
+}
+else {
+    /** Does an original file exist? */
+    if (!file_exists($actualFile)) {
+        showNotFound();
+        die();
+    }
 
-    default:
-        $srcImage = null;
+    /** Simply load the image from file */
+    switch ($fileType) {
+        case 'jpg':
+        case 'jpeg':
+            $srcImage = imagecreatefromjpeg($actualFile);
+            break;
+
+        case 'gif':
+            $srcImage = imagecreatefromgif($actualFile);
+            break;
+
+        case 'png':
+            $srcImage = imagecreatefrompng($actualFile);
+            break;
+
+        default:
+            $srcImage = null;
+    }
 }
 
 /** If we couldn't read the file, return file not found */
