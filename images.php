@@ -10,10 +10,13 @@
 $imageSource = __DIR__ . '/'; /* 'http://www.mycareersroom.co.uk/_gfx/images/'; */
 
 /** @var string $defaultFile        Whether we want a default image if one is not available */
-$defaultFile = 'test_it';
+$defaultFile = 'default';
+
+/** @var array $allowTrans			If not null, allow the system to look for alternative filetypes */
+$allowTrans = array('jpg', 'png', 'gif');
 
 /** @var array $allowedSizes        This is a list of sizes that are allowed */
-$allowedSizes = array('400x400', '290x180', '150x100', 'm150x100', 'm2000x100');
+$allowedSizes = array('m200x200', 'm200x150');
 
 /** @var int $jpegQuality           Default quality for JPEG images */
 $jpegQuality = 85;
@@ -75,7 +78,7 @@ list($fileType, $nameNoType) = array_map('strrev', array_pad(explode('.', strrev
 
 /** @var string $actualFile         and actual file name */
 /** @var string $reqSize            Split the file name into size */
-list($reqSize, $actualFile) = array_map('strrev', array_pad(explode('_', strrev($nameNoType), 2), 2, null));
+list($reqSize, $sourceFile) = array_map('strrev', array_pad(explode('_', strrev($nameNoType), 2), 2, null));
 
 
 /** Make sure the size is listed in the $allowedSizes array */
@@ -98,7 +101,7 @@ else {
 list($newWidth, $newHeight) = explode('x', $reqSize, 2);
 
 /** @var string $actualFile         Create the filename */    
-$actualFile = $imageSource . $actualFile . '.' . $fileType;
+$actualFile = $imageSource . $sourceFile . '.' . $fileType;
 
 /** Work out where the source file is and either download or simply read */
 if (strpos($actualFile, '//')!==false) {
@@ -121,16 +124,34 @@ if (strpos($actualFile, '//')!==false) {
 }
 else {
     /** Does an original file exist? */
+	/** @var string $sourceType		Allow the source file type to be different */
+	$sourceType = $fileType;
     if (!file_exists($actualFile)) {
-        $actualFile = $defaultFile . '.' . $fileType;
-        if (!file_exists($actualFile)) {
-            showNotFound();
-            die();
+		/** @var boolean $fileFound	Has a file been found? */
+		$fileFound = false;
+		/** Look for alternative filetypes if allowed */
+		if (is_array($allowTrans)) {
+			foreach ($allowTrans as $type) {
+				if (!$fileFound && $type!=$fileType) {
+					$actualFile = $imageSource . $sourceFile . '.' . $type;
+					if (file_exists($actualFile)) {
+						$sourceType = $type;
+						$fileFound = true;
+					}
+				}
+			}
+		}
+		if (!$fileFound) {
+			$actualFile = $imageSource . $defaultFile . '.' . $fileType;
+			if (!file_exists($actualFile)) {
+				showNotFound();
+				die();
+			}
         }
     }
 
     /** Simply load the image from file */
-    switch (strtolower($fileType) {
+    switch (strtolower($sourceType)) {
         case 'jpg':
         case 'jpeg':
             $srcImage = imagecreatefromjpeg($actualFile);
@@ -175,6 +196,10 @@ if ($maxSize) {
     
     /** @var object $newImage       New image to copy the original image to the actual size we want */
     $newImage = imagecreatetruecolor($tempWidth, $tempHeight);
+	/** @var color $white			Get the color white */
+	$white  = imagecolorallocate($newImage, 255, 255, 255);
+	/** Fill entire image (quickly) */
+	imagefilledrectangle($newImage,0,0,$tempWidth-1,$tempHeight-1,$white);
     imagecopyresampled($newImage, $srcImage, 0, 0, 0, 0, $tempWidth, $tempHeight, $srcWidth, $srcHeight);
 }
 else {
@@ -201,7 +226,7 @@ else {
 
 /** Output the image to a file unless requested not to */
 if ($reqCmd != 'nocache') {
-    switch (strtolower($fileType) {
+    switch (strtolower($fileType)) {
         case 'jpg':
         case 'jpeg':
             imagejpeg($newImage, __DIR__ . '/' . $fileName, $jpegQuality);
@@ -218,7 +243,7 @@ if ($reqCmd != 'nocache') {
 }
 
 /** Send the image to the browser */
-switch (strtolower($fileType) {
+switch (strtolower($fileType)) {
     case 'jpg':
     case 'jpeg':
         header('Content-Type: image/jpeg');
