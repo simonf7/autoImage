@@ -7,7 +7,10 @@
 
 
 /** @var string $imageSource        Where the source images are */
-$imageSource = /*__DIR__ . '/'*/ 'http://www.mycareersroom.co.uk/_gfx/images/' ;
+$imageSource = __DIR__ . '/'; /* 'http://www.mycareersroom.co.uk/_gfx/images/'; */
+
+/** @var string $defaultFile        Whether we want a default image if one is not available */
+$defaultFile = 'test_it';
 
 /** @var array $allowedSizes        This is a list of sizes that are allowed */
 $allowedSizes = array('400x400', '290x180', '150x100', 'm150x100', 'm2000x100');
@@ -68,11 +71,12 @@ $requestUri = basename($_SERVER['REQUEST_URI']);
 list($fileName, $queryString) = array_pad(explode('?', $requestUri, 2), 2, null);
 
 /** @var string $fileType           the file extension */
-list($nameNoType, $fileType) = array_pad(explode('.', $fileName, 2), 2, null);
+list($fileType, $nameNoType) = array_map('strrev', array_pad(explode('.', strrev($fileName), 2), 2, null));
 
 /** @var string $actualFile         and actual file name */
 /** @var string $reqSize            Split the file name into size */
-list($actualFile, $reqSize) = array_pad(explode('_', $nameNoType, 2), 2, null);
+list($reqSize, $actualFile) = array_map('strrev', array_pad(explode('_', strrev($nameNoType), 2), 2, null));
+
 
 /** Make sure the size is listed in the $allowedSizes array */
 if ($allowedSizes!==null && !in_array($reqSize, $allowedSizes)) {
@@ -118,12 +122,15 @@ if (strpos($actualFile, '//')!==false) {
 else {
     /** Does an original file exist? */
     if (!file_exists($actualFile)) {
-        showNotFound();
-        die();
+        $actualFile = $defaultFile . '.' . $fileType;
+        if (!file_exists($actualFile)) {
+            showNotFound();
+            die();
+        }
     }
 
     /** Simply load the image from file */
-    switch ($fileType) {
+    switch (strtolower($fileType) {
         case 'jpg':
         case 'jpeg':
             $srcImage = imagecreatefromjpeg($actualFile);
@@ -194,7 +201,7 @@ else {
 
 /** Output the image to a file unless requested not to */
 if ($reqCmd != 'nocache') {
-    switch ($fileType) {
+    switch (strtolower($fileType) {
         case 'jpg':
         case 'jpeg':
             imagejpeg($newImage, __DIR__ . '/' . $fileName, $jpegQuality);
@@ -211,7 +218,7 @@ if ($reqCmd != 'nocache') {
 }
 
 /** Send the image to the browser */
-switch ($fileType) {
+switch (strtolower($fileType) {
     case 'jpg':
     case 'jpeg':
         header('Content-Type: image/jpeg');
