@@ -47,6 +47,35 @@ This command requires the passphrase to be passed and correct.
 ## Configuration options
 At the head of the file there are a number of configurable options -
 
+### $imageSource
+Specify where the source files are. For example in the current folder -
+```
+$imageSource = __DIR__ . '/';
+```
+Or remotely -
+```
+$imageSource = 'http://www.imageserver.com/';
+```
+
+### $defaultFile
+If the source file cannot be found, this specifies the filename of a local file to be used as a default.
+Note: this *does not* work when the image source is a remote server.
+```
+$defaultFile = 'default';
+```
+
+### $allowTrans
+This allows you to specify a list of file types that the source file can be if one is not found matching
+the requested file, or *null* if the file types must be the same.
+```
+$allowTrans = null;
+```
+For example, *file_100x100.jpg* could be requested but *file.png* exists on the server, this will allow
+the script to convert the PNG file into the requested JPEG.
+```
+$allowTrans = array('png');
+```
+
 ### $allowedSizes
 An array containing a list of sizes that can be requested, specified as a string '400x400' etc.
 ```
