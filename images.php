@@ -12,7 +12,7 @@ $imageSource = __DIR__ . '/'; /* 'http://www.mycareersroom.co.uk/_gfx/images/'; 
 /** @var string $defaultFile        Whether we want a default image if one is not available */
 $defaultFile = 'default';
 
-/** @var array $allowTrans			If not null, allow the system to look for alternative filetypes */
+/** @var array $allowTrans          If not null, allow the system to look for alternative filetypes */
 $allowTrans = array('jpg', 'png', 'gif');
 
 /** @var array $allowedSizes        This is a list of sizes that are allowed */
@@ -73,11 +73,12 @@ $requestUri = basename($_SERVER['REQUEST_URI']);
 /** @var string $fileName       Split off file name from the URI, discard the query string these will be in the $_REQUEST array */
 list($fileName, $queryString) = array_pad(explode('?', $requestUri, 2), 2, null);
 
-/** @var string $fileType           the file extension */
+/** @var string $fileType       Split of the file extension that has been requested */
+/** @var string $nameNoType	from the full filename (including size requested) */
 list($fileType, $nameNoType) = array_map('strrev', array_pad(explode('.', strrev($fileName), 2), 2, null));
 
-/** @var string $actualFile         and actual file name */
-/** @var string $reqSize            Split the file name into size */
+/** @var string $reqSize        Split the file name into size */
+/** @var string $sourceFile	and the name of the source file */
 list($reqSize, $sourceFile) = array_map('strrev', array_pad(explode('_', strrev($nameNoType), 2), 2, null));
 
 
@@ -87,7 +88,7 @@ if ($allowedSizes!==null && !in_array($reqSize, $allowedSizes)) {
     die();
 }
 
-/** @var boolean $maxSize           If the size request starts with an 'm' we're just choosing the maximum size */
+/** @var boolean $maxSize       If the size request starts with an 'm' we're just choosing the maximum size */
 if (substr($reqSize, 0, 1)=='m') {
     $maxSize = true;
     $reqSize = substr($reqSize, 1);
@@ -96,16 +97,16 @@ else {
     $maxSize = false;
 }
 
-/** @var int $newWidth              Dimensions of the new file requested, width x height */
-/** @var int $newHeight             and height */
+/** @var int $newWidth          Dimensions of the new file requested, width x height */
+/** @var int $newHeight         and height */
 list($newWidth, $newHeight) = explode('x', $reqSize, 2);
 
-/** @var string $actualFile         Create the filename */    
+/** @var string $actualFile     Create the source filename for local or remote download */    
 $actualFile = $imageSource . $sourceFile . '.' . $fileType;
 
 /** Work out where the source file is and either download or simply read */
 if (strpos($actualFile, '//')!==false) {
-    /** @var object $ch             The CURL object to download the file from a remote source */
+    /** @var object $ch         The CURL object to download the file from a remote source */
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $actualFile);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -115,7 +116,7 @@ if (strpos($actualFile, '//')!==false) {
     $error = curl_error($ch); 
     curl_close($ch);
 
-    /** @var object $srcImage       Create the image from what's downloaded */
+    /** @var object $srcImage   Create the image from what's downloaded */
     $srcImage = @imagecreatefromstring($imageData);
     if ($srcImage===false) {
         showNotFound();
@@ -124,33 +125,35 @@ if (strpos($actualFile, '//')!==false) {
 }
 else {
     /** Does an original file exist? */
-	/** @var string $sourceType		Allow the source file type to be different */
-	$sourceType = $fileType;
+    /** @var string $sourceType Allow the source file type to be different */
+    $sourceType = $fileType;
     if (!file_exists($actualFile)) {
-		/** @var boolean $fileFound	Has a file been found? */
-		$fileFound = false;
-		/** Look for alternative filetypes if allowed */
-		if (is_array($allowTrans)) {
-			foreach ($allowTrans as $type) {
-				if (!$fileFound && $type!=$fileType) {
-					$actualFile = $imageSource . $sourceFile . '.' . $type;
-					if (file_exists($actualFile)) {
-						$sourceType = $type;
-						$fileFound = true;
-					}
-				}
-			}
+	/** Straight match not found so look through alternative file types to see if one exists */
+	/** @var boolean $fileFound Has a file been found? */
+	$fileFound = false;
+	/** Look for alternative filetypes if allowed */
+	if (is_array($allowTrans)) {
+	    foreach ($allowTrans as $type) {
+		if (!$fileFound && $type!=$fileType) {
+		    $actualFile = $imageSource . $sourceFile . '.' . $type;
+		    if (file_exists($actualFile)) {
+			$sourceType = $type;
+			$fileFound = true;
+		    }
 		}
-		if (!$fileFound) {
-			$actualFile = $imageSource . $defaultFile . '.' . $fileType;
-			if (!file_exists($actualFile)) {
-				showNotFound();
-				die();
-			}
+	    }
+	}
+	/** If a source file wasn't found, return the defaultFile is one is specified */
+	if (!$fileFound) {
+	    $actualFile = $imageSource . $defaultFile . '.' . $fileType;
+	    if (!file_exists($actualFile)) {
+		showNotFound();
+		die();
+	    }
         }
     }
 
-    /** Simply load the image from file */
+    /** Load the image from file */
     switch (strtolower($sourceType)) {
         case 'jpg':
         case 'jpeg':
@@ -194,12 +197,12 @@ if ($maxSize) {
         $tempWidth = $newHeight * $srcRatio;
     }
     
-    /** @var object $newImage       New image to copy the original image to the actual size we want */
+    /** @var object $newImage   New image to copy the original image to the actual size we want */
     $newImage = imagecreatetruecolor($tempWidth, $tempHeight);
-	/** @var color $white			Get the color white */
-	$white  = imagecolorallocate($newImage, 255, 255, 255);
-	/** Fill entire image (quickly) */
-	imagefilledrectangle($newImage,0,0,$tempWidth-1,$tempHeight-1,$white);
+    /** @var color $white   Get the color white */
+    $white  = imagecolorallocate($newImage, 255, 255, 255);
+    /** Fill entire image (quickly) */
+    imagefilledrectangle($newImage,0,0,$tempWidth-1,$tempHeight-1,$white);
     imagecopyresampled($newImage, $srcImage, 0, 0, 0, 0, $tempWidth, $tempHeight, $srcWidth, $srcHeight);
 }
 else {
@@ -225,7 +228,7 @@ else {
 }
 
 /** Output the image to a file unless requested not to */
-if ($reqCmd != 'nocache') {
+if ($reqCmd!='nocache') {
     switch (strtolower($fileType)) {
         case 'jpg':
         case 'jpeg':
