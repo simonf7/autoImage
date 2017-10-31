@@ -75,6 +75,7 @@ the script to convert the PNG file into the requested JPEG.
 ```
 $allowTrans = array('png');
 ```
+**Note this only works with local files, not those downloaded from elsewhere.**
 
 ### $allowedSizes
 An array containing a list of sizes that can be requested, specified as a string '400x400' etc.
