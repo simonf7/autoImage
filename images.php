@@ -5,41 +5,40 @@
  * This file will allow an image to be automatically created based on the request
  */
 
+/** @var string $imageSource - Where the source images are */
+$imageSource = __DIR__ . '/';
 
-/** @var string $imageSource        Where the source images are */
-$imageSource = __DIR__ . '/'; /* 'http://www.mycareersroom.co.uk/_gfx/images/'; */
-
-/** @var string $defaultFile        Whether we want a default image if one is not available */
+/** @var string $defaultFile - Whether we want a default image if one is not available */
 $defaultFile = 'default';
 
-/** @var array $allowTrans          If not null, allow the system to look for alternative filetypes */
+/** @var array $allowTrans - If not null, allow the system to look for alternative filetypes */
 $allowTrans = array('jpg', 'png', 'gif');
 
-/** @var array $allowedSizes        This is a list of sizes that are allowed */
+/** @var array $allowedSizes - This is a list of sizes that are allowed */
 $allowedSizes = array('m200x200', 'm200x150');
 
-/** @var int $jpegQuality           Default quality for JPEG images */
+/** @var int $jpegQuality - Default quality for JPEG images */
 $jpegQuality = 85;
 
-/** @var string $passPhrase         Secret passphrases to allow admin functions */
+/** @var string $passPhrase - Secret passphrases to allow admin functions */
 $passPhrase = 'secret_passphrase'; /** Change this! */
 
-/** @var boolean $boolAdm           Was the passphrase sent and correct, this is needed to run any commands */
+/** @var boolean $boolAdm - Was the passphrase sent and correct, this is needed to run any commands */
 $boolPP = empty($_REQUEST['pp']) ? false : ($_REQUEST['pp'] == $passPhrase);
 
-/** @var string $reqCmd             Was there a command passed in the URL */
+/** @var string $reqCmd - Was there a command passed in the URL */
 $reqCmd = empty($_REQUEST['cmd']) ? null : $_REQUEST['cmd'];
 
 /** Delete any cached images */
 if ($reqCmd == 'delete' && $boolPP===true) {
-    /** @var string $reqFN          Was there a filename specified in the passed variables */
+    /** @var string $reqFN - Was there a filename specified in the passed variables */
     $reqFN = empty($_REQUEST['fn']) ? '' : $_REQUEST['fn'];
     if (!$reqFN) {
         die('Sorry, you must specify the file you want to delete.');
     }
     /** Go through each allowed size and remove the file is one already created */
     foreach ($allowedSizes as $size) {
-        /** @var string $checkName  Create the filename to check for based on passed filename and size */
+        /** @var string $checkName - Create the filename to check for based on passed filename and size */
         $checkName = __DIR__ . '/' . $reqFN . '_' . $size;
         if (file_exists($checkName)) {
             unlink($checkName);
@@ -67,17 +66,17 @@ if ($reqCmd == 'delete' && $boolPP===true) {
     }
 
 
-/** @var string $requestUri     Work out what we're asking for */
+/** @var string $requestUri - Work out what we're asking for */
 $requestUri = basename($_SERVER['REQUEST_URI']);
 
-/** @var string $fileName       Split off file name from the URI, discard the query string these will be in the $_REQUEST array */
+/** @var string $fileName - Split off file name from the URI, discard the query string these will be in the $_REQUEST array */
 list($fileName, $queryString) = array_pad(explode('?', $requestUri, 2), 2, null);
 
-/** @var string $fileType       Split of the file extension that has been requested */
-/** @var string $nameNoType	from the full filename (including size requested) */
+/** @var string $fileType - Split of the file extension that has been requested */
+/** @var string $nameNoType from the full filename (including size requested) */
 list($fileType, $nameNoType) = array_map('strrev', array_pad(explode('.', strrev($fileName), 2), 2, null));
 
-/** @var string $reqSize        Split the file name into size */
+/** @var string $reqSize - Split the file name into size */
 /** @var string $sourceFile	and the name of the source file */
 list($reqSize, $sourceFile) = array_map('strrev', array_pad(explode('_', strrev($nameNoType), 2), 2, null));
 
@@ -88,7 +87,7 @@ if ($allowedSizes!==null && !in_array($reqSize, $allowedSizes)) {
     die();
 }
 
-/** @var boolean $maxSize       If the size request starts with an 'm' we're just choosing the maximum size */
+/** @var boolean $maxSize - If the size request starts with an 'm' we're just choosing the maximum size */
 if (substr($reqSize, 0, 1)=='m') {
     $maxSize = true;
     $reqSize = substr($reqSize, 1);
@@ -97,16 +96,16 @@ else {
     $maxSize = false;
 }
 
-/** @var int $newWidth          Dimensions of the new file requested, width x height */
-/** @var int $newHeight         and height */
+/** @var int $newWidth - Dimensions of the new file requested, width x height */
+/** @var int $newHeight and height */
 list($newWidth, $newHeight) = explode('x', $reqSize, 2);
 
-/** @var string $actualFile     Create the source filename for local or remote download */    
+/** @var string $actualFile - Create the source filename for local or remote download */    
 $actualFile = $imageSource . $sourceFile . '.' . $fileType;
 
 /** Work out where the source file is and either download or simply read */
 if (strpos($actualFile, '//')!==false) {
-    /** @var object $ch         The CURL object to download the file from a remote source */
+    /** @var object $ch - The CURL object to download the file from a remote source */
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $actualFile);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -116,7 +115,7 @@ if (strpos($actualFile, '//')!==false) {
     $error = curl_error($ch); 
     curl_close($ch);
 
-    /** @var object $srcImage   Create the image from what's downloaded */
+    /** @var object $srcImage - Create the image from what's downloaded */
     $srcImage = @imagecreatefromstring($imageData);
     if ($srcImage===false) {
         showNotFound();
@@ -125,11 +124,11 @@ if (strpos($actualFile, '//')!==false) {
 }
 else {
     /** Does an original file exist? */
-    /** @var string $sourceType Allow the source file type to be different */
+    /** @var string $sourceType - Allow the source file type to be different */
     $sourceType = $fileType;
     if (!file_exists($actualFile)) {
 	/** Straight match not found so look through alternative file types to see if one exists */
-	/** @var boolean $fileFound Has a file been found? */
+	/** @var boolean $fileFound - Has a file been found? */
 	$fileFound = false;
 	/** Look for alternative filetypes if allowed */
 	if (is_array($allowTrans)) {
@@ -179,8 +178,8 @@ if ($srcImage===null) {
     die();
 }
 
-/** @var int $srcWidth          Dimensions of the image, width */
-/** @var int $srcHeight         and height */
+/** @var int $srcWidth - Dimensions of the image, width */
+/** @var int $srcHeight - and height */
 $srcWidth = imagesx($srcImage);
 $srcHeight = imagesy($srcImage);
 
@@ -197,9 +196,9 @@ if ($maxSize) {
         $tempWidth = $newHeight * $srcRatio;
     }
     
-    /** @var object $newImage   New image to copy the original image to the actual size we want */
+    /** @var object $newImage - New image to copy the original image to the actual size we want */
     $newImage = imagecreatetruecolor($tempWidth, $tempHeight);
-    /** @var color $white   Get the color white */
+    /** @var color $white - Get the color white */
     $white  = imagecolorallocate($newImage, 255, 255, 255);
     /** Fill entire image (quickly) */
     imagefilledrectangle($newImage,0,0,$tempWidth-1,$tempHeight-1,$white);
@@ -218,11 +217,11 @@ else {
         $tempHeight = $newHeight;
     }
 
-    /** @var object $tempImage      Create temporary image to store the scaled version */
+    /** @var object $tempImage - Create temporary image to store the scaled version */
     $tempImage = imagecreatetruecolor(round($tempWidth), round($tempHeight));
     imagecopyresampled($tempImage, $srcImage, 0, 0, 0, 0, $tempWidth, $tempHeight, $srcWidth, $srcHeight);
 
-    /** @var object $newImage       New image to crop the temporary image to the actual size we want */
+    /** @var object $newImage - New image to crop the temporary image to the actual size we want */
     $newImage = imagecreatetruecolor($newWidth, $newHeight);
     imagecopyresampled($newImage, $tempImage, 0, 0, (($tempWidth >> 1) - ($newWidth >> 1)), (($tempHeight >> 1) - ($newHeight >> 1)), $newWidth, $newHeight, $newWidth, $newHeight);
 }
