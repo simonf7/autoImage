@@ -1,9 +1,9 @@
 # autoImage
 Take an image and automatically create other sizes, caching by saving the results to the folder.
 
-Requesting 400x400_test.jpg will result (if test.jpg exists) in a cropped 400x400 version of test.jpg being returned.
+Requesting test_400x400.jpg will result (if test.jpg exists) in a cropped 400x400 version of test.jpg being returned.
 
-In addition 400x400_test.jpg will be written to the folder to be returned next time the file is requested.
+In addition test_400x400.jpg will be written to the folder to be returned next time the file is requested.
 
 Prefixing the size with an 'm' instructs the script to use the size as a maximum size maintaining the aspect ratio of the source. Specifying a large size for either the height or width effectively sets a maximum width or height.
 
@@ -26,7 +26,7 @@ Prevents the script from saving the cached copy of the new image on the server.
 
 *Example*
 ```
-/400x400_test.jpg?cmd=nocache
+/test_400x400.jpg?cmd=nocache
 ```
 
 This command doesn't require the passphrase.
@@ -70,7 +70,7 @@ the requested file, or *null* if the file types must be the same.
 ```
 $allowTrans = null;
 ```
-For example, *file_100x100.jpg* could be requested but *file.png* exists on the server, this will allow
+For example, *file_100x100.jpg* could be requested but if *file.png* exists on the server, this will allow
 the script to convert the PNG file into the requested JPEG.
 ```
 $allowTrans = array('png');
