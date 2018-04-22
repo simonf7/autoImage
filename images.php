@@ -36,10 +36,14 @@ if ($reqCmd == 'delete' && $boolPP===true) {
     if (!$reqFN) {
         die('Sorry, you must specify the file you want to delete.');
     }
+    /** @var string $fileType - Split of the file extension that has been requested */
+    /** @var string $fileName from the full filename */
+    list($fileType, $fileName) = array_map('strrev', array_pad(explode('.', strrev($reqFN), 2), 2, null));
+    
     /** Go through each allowed size and remove the file is one already created */
     foreach ($allowedSizes as $size) {
         /** @var string $checkName - Create the filename to check for based on passed filename and size */
-        $checkName = __DIR__ . '/' . $reqFN . '_' . $size;
+        $checkName = __DIR__ . '/' . $fileName . '_' . $size . '.' . $fileType;
         if (file_exists($checkName)) {
             unlink($checkName);
         }
@@ -80,7 +84,6 @@ list($fileType, $nameNoType) = array_map('strrev', array_pad(explode('.', strrev
 /** @var string $sourceFile	and the name of the source file */
 list($reqSize, $sourceFile) = array_map('strrev', array_pad(explode('_', strrev($nameNoType), 2), 2, null));
 
-
 /** Make sure the size is listed in the $allowedSizes array */
 if ($allowedSizes!==null && !in_array($reqSize, $allowedSizes)) {
     showNotFound();
@@ -91,8 +94,7 @@ if ($allowedSizes!==null && !in_array($reqSize, $allowedSizes)) {
 if (substr($reqSize, 0, 1)=='m') {
     $maxSize = true;
     $reqSize = substr($reqSize, 1);
-}
-else {
+} else {
     $maxSize = false;
 }
 
@@ -100,7 +102,7 @@ else {
 /** @var int $newHeight and height */
 list($newWidth, $newHeight) = explode('x', $reqSize, 2);
 
-/** @var string $actualFile - Create the source filename for local or remote download */    
+/** @var string $actualFile - Create the source filename for local or remote download */
 $actualFile = $imageSource . $sourceFile . '.' . $fileType;
 
 /** Work out where the source file is and either download or simply read */
@@ -109,10 +111,10 @@ if (strpos($actualFile, '//')!==false) {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $actualFile);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_SSLVERSION,3);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, TRUE);
+    curl_setopt($ch, CURLOPT_SSLVERSION, 3);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     $imageData = curl_exec($ch);
-    $error = curl_error($ch); 
+    $error = curl_error($ch);
     curl_close($ch);
 
     /** @var object $srcImage - Create the image from what's downloaded */
@@ -121,34 +123,33 @@ if (strpos($actualFile, '//')!==false) {
         showNotFound();
         die();
     }
-}
-else {
+} else {
     /** Does an original file exist? */
     /** @var string $sourceType - Allow the source file type to be different */
     $sourceType = $fileType;
     if (!file_exists($actualFile)) {
-	/** Straight match not found so look through alternative file types to see if one exists */
-	/** @var boolean $fileFound - Has a file been found? */
-	$fileFound = false;
-	/** Look for alternative filetypes if allowed */
-	if (is_array($allowTrans)) {
-	    foreach ($allowTrans as $type) {
-		if (!$fileFound && $type!=$fileType) {
-		    $actualFile = $imageSource . $sourceFile . '.' . $type;
-		    if (file_exists($actualFile)) {
-			$sourceType = $type;
-			$fileFound = true;
-		    }
-		}
-	    }
-	}
-	/** If a source file wasn't found, return the defaultFile is one is specified */
-	if (!$fileFound) {
-	    $actualFile = $imageSource . $defaultFile . '.' . $fileType;
-	    if (!file_exists($actualFile)) {
-		showNotFound();
-		die();
-	    }
+        /** Straight match not found so look through alternative file types to see if one exists */
+        /** @var boolean $fileFound - Has a file been found? */
+        $fileFound = false;
+        /** Look for alternative filetypes if allowed */
+        if (is_array($allowTrans)) {
+            foreach ($allowTrans as $type) {
+                if (!$fileFound && $type!=$fileType) {
+                    $actualFile = $imageSource . $sourceFile . '.' . $type;
+                    if (file_exists($actualFile)) {
+                        $sourceType = $type;
+                        $fileFound = true;
+                    }
+                }
+            }
+        }
+        /** If a source file wasn't found, return the defaultFile if one is specified */
+        if (!$fileFound) {
+            $actualFile = $imageSource . $defaultFile . '.' . $fileType;
+            if (!file_exists($actualFile)) {
+                showNotFound();
+                die();
+            }
         }
     }
 
@@ -190,8 +191,7 @@ if ($maxSize) {
     if (($srcWidth/$newWidth)>($srcHeight/$newHeight)) {
         $tempWidth = $newWidth;
         $tempHeight = $newWidth / $srcRatio;
-    }
-    else {
+    } else {
         $tempHeight = $newHeight;
         $tempWidth = $newHeight * $srcRatio;
     }
@@ -201,18 +201,16 @@ if ($maxSize) {
     /** @var color $white - Get the color white */
     $white  = imagecolorallocate($newImage, 255, 255, 255);
     /** Fill entire image (quickly) */
-    imagefilledrectangle($newImage,0,0,$tempWidth-1,$tempHeight-1,$white);
+    imagefilledrectangle($newImage, 0, 0, $tempWidth-1, $tempHeight-1, $white);
     imagecopyresampled($newImage, $srcImage, 0, 0, 0, 0, $tempWidth, $tempHeight, $srcWidth, $srcHeight);
-}
-else {
+} else {
     /** Work out scaling */
     $srcRatio = $srcWidth/$srcHeight;
     $newRatio = $newWidth/$newHeight;
     if ($newRatio > $srcRatio) {
         $tempHeight = $newWidth / $srcRatio;
         $tempWidth = $newWidth;
-    }
-    else {
+    } else {
         $tempWidth = $newHeight * $srcRatio;
         $tempHeight = $newHeight;
     }
@@ -232,7 +230,7 @@ if ($reqCmd!='nocache') {
         case 'jpg':
         case 'jpeg':
             imagejpeg($newImage, __DIR__ . '/' . $fileName, $jpegQuality);
-            break;        
+            break;
 
         case 'gif':
             imagegif($newImage, __DIR__ . '/' . $fileName);
