@@ -73,14 +73,14 @@ $allowTrans = null;
 For example, *file_100x100.jpg* could be requested but if *file.png* exists on the server, this will allow
 the script to convert the PNG file into the requested JPEG.
 ```
-$allowTrans = array('png');
+$allowTrans = ['png'];
 ```
 **Note:** *this only works with local files, not those downloaded from elsewhere.*
 
 ### $allowedSizes
 An array containing a list of sizes that can be requested, specified as a string '400x400' etc.
 ```
-$allowedSizes = array('100x100', '600x400');
+$allowedSizes = ['100x100', '600x400'];
 ```
 If this is null then any size can be requested.
 ```

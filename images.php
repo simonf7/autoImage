@@ -12,10 +12,10 @@ $imageSource = __DIR__ . '/';
 $defaultFile = 'default';
 
 /** @var array $allowTrans - If not null, allow the system to look for alternative filetypes */
-$allowTrans = array('jpg', 'png', 'gif');
+$allowTrans = ['jpg', 'png', 'gif'];
 
 /** @var array $allowedSizes - This is a list of sizes that are allowed */
-$allowedSizes = array('m200x200', 'm200x150');
+$allowedSizes = ['m200x200', 'm200x150'];
 
 /** @var int $jpegQuality - Default quality for JPEG images */
 $jpegQuality = 85;
